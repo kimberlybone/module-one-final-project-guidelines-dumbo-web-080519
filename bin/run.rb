@@ -3,10 +3,19 @@ require_relative '../config/environment'
 
 
 
-new_cli = CarePortal.new
-new_cli.welcome
-new_cli.check_account
-new_cli.show_menu
+cli = CarePortal.new
+patient_obj = cli.welcome
+
+while !patient_obj
+    patient_obj = cli.welcome
+end 
+
+cli.patient = patient_obj
+# cli.check_account
+cli.show_menu
+
+binding.pry
+
 
 
 
