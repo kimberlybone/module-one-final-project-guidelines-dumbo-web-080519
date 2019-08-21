@@ -11,7 +11,6 @@ while !patient_obj
 end 
 
 cli.patient = patient_obj
-# cli.check_account
 cli.show_menu
 
 binding.pry

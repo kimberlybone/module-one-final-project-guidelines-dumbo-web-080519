@@ -13,18 +13,23 @@ class Patient < ActiveRecord::Base
         puts "What is your name?"
         name = gets.chomp
         Patient.create(name: name)
+        puts "Welcome #{name}, we have created an account for you!"
+        Patient.find_by(name: name)
     end
 
     def pt_appointments
         # appts = Appointment.all.select do |appt|
         #     appt.patient_id == self.id
         # end
+        puts "Here are your appointments: "
+        puts " "
         self.appointments.each do |appt|
             puts "date: #{appt.date}"
             puts "time: #{appt.time}"
-            puts "doctor: #{appt.doctor}"
-            puts "reason: #{appt.reason}\n"
-            
+            puts "doctor: #{appt.doctor.name}"
+            puts "reason: #{appt.reason}"
+            puts ""
+            puts "------------------------------"
         end 
     end 
 
