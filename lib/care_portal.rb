@@ -9,9 +9,16 @@ class CarePortal
         @prompt = TTY::Prompt.new
     end 
 
+    def line_separation
+        puts " "
+        puts "-------------------------------------"
+        puts " "
+    end 
+
     def welcome 
+        system "clear"
         puts "Welcome to CarePortal!"
-       self.prompt.select("Do you already have an account?") do |m|
+        prompt.select("Do you already have an account?") do |m|
             m.choice "Yes", -> {Patient.handle_returning_user}
             m.choice "No", -> {Patient.handle_new_user}
         end 
@@ -19,19 +26,27 @@ class CarePortal
 
     def show_menu
         system "clear"
-        patient.reload
-        prompt.select "Please select what you would like to do." do |menu|
-        menu.choice "Schedule", -> {handle_schedule}
-        menu.choice "Update", -> {handle_update}
-        menu.choice "Cancel", -> {cancel}
-        menu.choice "View", -> {patient.pt_appointments}
-        menu.choice "Quit", -> {quit}
+        menu_options = prompt.select "Please select what you would like to do." do |menu|
+            menu.choice "Schedule", -> {handle_schedule}
+            menu.choice "Update", -> {handle_update}
+            menu.choice "View", -> {view}
+            menu.choice "Cancel Appointment", -> {cancel_appointment}
+            menu.choice "Quit", -> {quit}
         end 
     end
 
+
+    def view 
+        patient.reload
+        system "clear"
+        patient.pt_appointments
+        continue?
+      
+    end 
+
     def doctor_in_system
         doctor_list = Doctor.all.each_with_index.inject({}) do |hash, (doctor, i)|
-            hash["#{i + 1}) #{doctor.name} - #{doctor.specialty}"] = doctor.id
+            hash["#{i + 1}) #{doctor.name} | #{doctor.specialty}"] = doctor.id
             hash
         end
 
@@ -42,12 +57,12 @@ class CarePortal
 
     def doctor_not_in_system
         system "clear"
-        doctor_name = prompt.ask("Please enter the doctor's name: ")
+        doctor_name = prompt.ask("Please enter the doctor's name (ex: Dr. John Doe): ")
         
         @doctor = Doctor.create(name: doctor_name, specialty: nil)
 
         choices = {Cardiovascular: 1, Neurology: 2, Pulmonology: 3, Ophthalmology: 4, Orthodontal: 5, Gyneocology: 6, Family: 7, Pediatrics: 8, Dermatology: 9}
-        dr_specialty = prompt.select("Please choose a specialty for your doctor", choices)
+        dr_specialty = prompt.select("Please choose a specialty for your doctor (Scroll down): ", choices)
     
         case dr_specialty
         when 1
@@ -73,40 +88,50 @@ class CarePortal
 
     def output_doctor_specialty
         Doctor.all.map{ |doctor|
-            puts "Doctor: #{doctor.name} Specialty: #{doctor.specialty}"
+            puts "Doctor: #{doctor.name} | Specialty: #{doctor.specialty}"
         }
     end
 
-    def handle_schedule
-        system "clear"
+
+    def appt_list_w_specialty
         patient.reload
-        date = prompt.ask("What day do you want to schedule your appointment for?")
-        time = prompt.ask( "What time do you want to schedule your appointment for?")
+        patient.appointments.each_with_index.inject({}) do |hash, (appointment, i)|
+            this_doctor = Doctor.find(appointment.doctor_id)
+            hash["#{i + 1}) #{appointment.date} | #{this_doctor.name} | #{this_doctor.specialty}"] = appointment.id
+            hash
+        end 
+    end
+
+
+    def handle_schedule
+        patient.reload
+        system "clear"
+        date = prompt.ask("What day do you want to schedule your appointment for? (ex: 08-05-19)")
+        time = prompt.ask( "What time do you want to schedule your appointment for? (ex: 10:00 am)")
         reason = prompt.ask( "What is the reason for your visit?")
 
+        line_separation
+
         output_doctor_specialty
+
+        line_separation
         
         prompt.select("Is your doctor already in the system?") do |m|
             m.choice 'Yes', -> {doctor_in_system} 
             m.choice 'No', -> {doctor_not_in_system}
         end 
-    
-        Appointment.create(date: date, time: time, doctor: @doctor, patient: @patient, reason: reason)
 
-        puts "Here are your appointments: " 
-        puts " "
-        @patient.appointments.each do |appt|
-            puts "Date: #{appt.date}"
-            puts "Time: #{appt.time}"
-            puts "Doctor: #{appt.doctor.name}"
-            puts "Specialty: #{appt.doctor.specialty}"
-            puts "Reason: #{appt.reason}"
-            puts "-----------------------------------" 
-        end
+        line_separation
+
+        Appointment.create(date: date, time: time, doctor: @doctor, patient: @patient, reason: reason)
+        system "clear"
+        patient.pt_appointments
         continue?
     end
 
     def continue?
+        patient.reload
+        system "clear"
         prompt.select "What do you want to do now?" do |menu|
             menu.choice "Main Menu", -> {show_menu}
             menu.choice "Exit", -> {quit}
@@ -122,60 +147,73 @@ class CarePortal
         appts_on_that_day = patient.pt_appointments.pluck(date: appt_day)
     end 
 
+    def display_appt_options
+        patient.reload
+        patient.appointments.each_with_index.inject({}) do |hash, (appointment, i)|
+            this_doctor = Doctor.find(appointment.doctor_id)
+            hash["#{i + 1}) #{appointment.date} | #{appointment.time} | #{this_doctor.name} | #{this_doctor.specialty} | #{appointment.reason}"] = appointment.id
+            hash
+        end
+    end 
+
+
     def handle_update
         patient.reload 
-        appt_day = prompt.select("Select an appointment", patient.pt_appointments.pluck(:date))
-        specific_appt= patient.pt_appointments.select { |appt| appt.date == appt_day}
-        choices = {date: 1, time: 2, doctor: 3, reason: 4}
+        system "clear"
+
+        display_appt_options
+
+        appt_id = prompt.select("Please select an appointment: ", display_appt_options)
+        appointment = Appointment.find(appt_id)
+        
+
+        choices = {Date: 1, Time: 2, Doctor: 3, Reason: 4}
         attributes = prompt.multi_select("What do you want to change about this appointment?", choices)
             attributes.each do |attribute|
                 case attribute
                 when 1
-                    new_date = prompt.ask("What is the new date?")
-                    specific_appt[0].date = new_date
+                    new_date = prompt.ask("What is the new date? (ex: 08-05-19)")
+                    appointment.update(date: new_date) 
                 when 2
-                    new_time = prompt.ask("What is the new time?")
-                    specific_appt[0].time = new_time
+                    new_time = prompt.ask("What is the new time? (ex: 3:15 pm)")
+                    appointment.update(time: new_time)
                 when 3 
-                    new_doctor = prompt.ask("What is the new doctor?")
-                    specific_appt[0].doctor.name = new_doctor
+                    new_doctor_name = prompt.ask("What is the new doctor? (ex: Dr. Bill Smith)")
+                    appointment.doctor.update(name: new_doctor_name)
+                    #make a selection of doctors
                 when 4 
                     new_reason = prompt.ask("What is the new reason?")
-                    specific_appt[0].reason = new_reason
+                    appointment.update(reason: new_reason)
                 end 
+                # system "clear"
+             
+                puts "Date: #{appointment.date}"
+                puts "Time: #{appointment.time}"
+                puts "Doctor: #{appointment.doctor.name}"
+                puts "Reason: #{appointment.reason}"
 
-                specific_appt.each do |appt|
-                    puts "Date: #{appt.date}"
-                    puts "Time: #{appt.time}"
-                    puts "Doctor: #{appt.doctor.name}"
-                    puts "Reason: #{appt.reason}"
-                    puts " "
-                    puts "-----------------------"
-                end 
+                line_separation           
             end 
             continue?
     end
 
-    def cancel
+    def cancel_appointment
         patient.reload 
-        appt_day = prompt.select("Select an appointment", patient.pt_appointments.pluck(:date))
-        specific_appt= patient.pt_appointments.select { |appt| appt.date == appt_day}
+        system "clear"
 
-        specific_appt.each do |appt|
-            puts "date: #{appt.date}"
-            puts "time: #{appt.time}"
-            puts "doctor: #{appt.doctor.name}"
-            puts "reason: #{appt.reason}\n"
-            puts " "
-        end
-        
+        appt_list_w_specialty
+
+        appt_id = prompt.select("Which appointment would you like to cancel?", appt_list_w_specialty)
+
         answer = prompt.yes?('Are you sure you would like to cancel this appointment?')
        
         if answer
-            Appointment.destroy(specific_appt[0].id)
+            Appointment.destroy(appt_id)
             puts "Your appointment has been cancelled"
         end
-        continue?
+        system "clear"
+        patient.pt_appointments
+        continue?      
     end 
 
 

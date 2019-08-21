@@ -6,7 +6,6 @@ class Patient < ActiveRecord::Base
         puts "Please enter your name."
         name = gets.chomp
         Patient.find_by(name: name)
-
     end
 
     def self.handle_new_user
@@ -18,18 +17,18 @@ class Patient < ActiveRecord::Base
     end
 
     def pt_appointments
-        # appts = Appointment.all.select do |appt|
-        #     appt.patient_id == self.id
-        # end
+        puts " "
         puts "Here are your appointments: "
         puts " "
         self.appointments.each do |appt|
-            puts "date: #{appt.date}"
-            puts "time: #{appt.time}"
-            puts "doctor: #{appt.doctor.name}"
-            puts "reason: #{appt.reason}"
+            puts "Date: #{appt.date}"
+            puts "Time: #{appt.time}"
+            puts "Doctor: #{appt.doctor.name}"
+            puts "Specialty: #{appt.doctor.specialty}"
+            puts "Reason: #{appt.reason}"
             puts ""
             puts "------------------------------"
+            puts ""
         end 
     end 
 

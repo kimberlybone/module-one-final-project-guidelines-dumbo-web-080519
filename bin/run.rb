@@ -13,7 +13,7 @@ end
 cli.patient = patient_obj
 cli.show_menu
 
-binding.pry
+# binding.pry
 
 
 
