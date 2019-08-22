@@ -1,3 +1,8 @@
+#CARE PORTAL 
+#Authors: Kimberly Bone and Zermina Ejaz
+#Our app is a portal for patients and doctors to be able to view, update, cancel, and schedule appointments. Menu features come from TTY:Prompt. This app allows for a better way to communicate between patient and doctor 
+
+
 
 require_relative '../config/environment'
 
