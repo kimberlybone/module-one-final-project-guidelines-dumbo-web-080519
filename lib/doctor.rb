@@ -26,10 +26,12 @@ class Doctor < ActiveRecord::Base
         self.appointments.each do |appt|
             puts "\u001b[1m\u001b[4mDate:\u001b[0m #{appt.date}"
             puts "\u001b[1m\u001b[4mTime:\u001b[0m #{appt.time}"
+            puts ""
             puts "\u001b[1m\u001b[4mPatient:\u001b[0m #{appt.patient.name}"
+            puts "\u001b[1m\u001b[4mReason:\u001b[0m #{appt.reason}"
+            puts ""
             puts "\u001b[1m\u001b[4mDoctor:\u001b[0m #{appt.doctor.name}"
             puts "\u001b[1m\u001b[4mSpecialty:\u001b[0m #{appt.doctor.specialty}"
-            puts "\u001b[1m\u001b[4mReason:\u001b[0m #{appt.reason}"
             puts ""
             puts "------------------------------"
             puts ""

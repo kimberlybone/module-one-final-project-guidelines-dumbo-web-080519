@@ -56,7 +56,7 @@ class CarePortal
                 menu.choice "\u001b[35;1mSchedule", -> {doctor_schedules_appt} #check, create handle schedul emethod depending on patient or doctor
                 menu.choice "Update", -> {doctor_handle_update}
                 menu.choice "View", -> {doctor_view}
-                menu.choice "Cancel Appointment", -> {doc_cancel_appointment}
+                menu.choice "Cancel Appointment", -> {doctor_cancel_appointment}
                 menu.choice "Quit", -> {quit}
             end 
         end 
@@ -152,7 +152,7 @@ class CarePortal
     def cancel_appointment
         patient.reload 
         system "clear"
-         if patient.appointments == [] 
+         if patient.appointments.length < 1
             puts "\u001b[31;1mThere are no appointments to cancel. Please schedule an appointment to cancel!\u001b[0m"
             prompt.keypress("Press any key to continue.")
             continue?
@@ -240,7 +240,7 @@ class CarePortal
                     m.choice 'Yes', -> {patient_in_system} 
                     m.choice 'No', -> {patient_not_in_system}
                 end 
-                appointment.patient.update(name: new_pt_obj.name)
+                appointment.update(patient: new_pt_obj) #
                 #make a selection of patients
             when 4 
                 new_reason = prompt.ask("What is the new reason?")
@@ -264,7 +264,7 @@ class CarePortal
     def doctor_view
         doctor.reload
         system "clear"
-        if doctor.appointments == []
+        if doctor.appointments.length < 1
             puts "\u001b[31;1mThere are no appointments to view. Please schedule an appointment to view!\u001b[0m"
             prompt.keypress("Press any key to continue.")
             doc_continue?
@@ -274,7 +274,7 @@ class CarePortal
         doc_continue? 
     end 
 #cancels appointment with patient
-    def doc_cancel_appointment
+    def doctor_cancel_appointment
         doctor.reload 
         system "clear"
         if doctor.appointments == [] 
