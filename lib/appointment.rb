@@ -23,7 +23,6 @@ class Appointment < ActiveRecord::Base
 
         line_separation
 
-        #check this line
         Appointment.create(date: date, time: time, doctor: doctor, patient: patient, reason: reason)
         system "clear"
         doctor.dc_appointments
@@ -47,14 +46,12 @@ class Appointment < ActiveRecord::Base
         @patient = Patient.find(choice)
     end 
 
-
     def patient_not_in_system
         system "clear"
         patient_name = prompt.ask("\u001b[35;1m\u001b[1mPlease enter the patient's name\u001b[0m (ex: John Doe): ")
         
         @patient = Patient.create(name: patient_name)
     end 
-
     # Updates appointment attributes chosen 
     def doctor_handle_update
         doctor.reload 
@@ -64,11 +61,10 @@ class Appointment < ActiveRecord::Base
             prompt.keypress("Press any key to continue.")
             continue?
         end 
-        display_appt_options #come back
+        display_appt_options 
         appt_id = prompt.select("Please select an appointment: ", display_appt_options)
         appointment = Appointment.find(appt_id)
         
-
         choices = {Date: 1, Time: 2, Doctor: 3, Reason: 4}
         attributes = prompt.multi_select("What do you want to change about this appointment?", choices)
             attributes.each do |attribute|
@@ -86,7 +82,6 @@ class Appointment < ActiveRecord::Base
                     m.choice 'No', -> {doctor_not_in_system}
                 end 
                 appointment.doctor.update(name: new_doc_obj.name)
-                #make a selection of doctors
             when 4 
                 new_reason = prompt.ask("What is the new reason?")
                 appointment.update(reason: new_reason)
@@ -102,5 +97,4 @@ class Appointment < ActiveRecord::Base
         prompt.keypress("Press any key to continue.")
         continue?
     end
-
 end 
